@@ -5,7 +5,7 @@
 To address the challenge of difficulty in accurate segmentation caused by soft boundaries in medical images, we specifically designed the Learnable Anti-aliasing Block, the Boundary Learner, and the Boundary Guidance Module. The entire network follows the U-KAN settings and is divided into three parts: encoder layers, decoder layers, and a bottleneck layer. During the encoding stage, we introduce the Learnable Anti-aliasing Block to perform learnable anti-aliasing processing on the encoded features before downsampling, thereby reducing boundary misalignment during segmentation and the Boundary Learner is employed to extract boundary information from both shallow and deep features. During the decoding phase, the Boundary Guidance Module utilizes this learned boundary information in a cross-scale manner to guide precise segmentation of the target regions.
 
 <div align="center">
-    <img width="100%" alt="BGANet overview" src="assets/framework-1.jpg"/>
+    <img width="100%" alt="BGANet overview" src="overview.png"/>
 </div>
 
 
