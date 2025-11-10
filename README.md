@@ -16,6 +16,8 @@ Our BGANet takes U-KAN [12] as the foundational framework. Fig. 2 illustrates it
 </div>
 
 
+
+
 ## 🛠Setup
 
 ```bash
@@ -29,12 +31,16 @@ pip install -r requirements.txt
 **Tips A**: We test the framework using pytorch=1.13.0, and the CUDA compile version=11.6. Other versions should be also fine but not totally ensured.
 
 
+
+
 ## 📚Data Preparation
 **BUSI**:  The dataset can be found [here](https://www.kaggle.com/datasets/aryashah2k/breast-ultrasound-images-dataset). 
 
 **GLAS**:  The dataset can be found [here](https://websignon.warwick.ac.uk/origin/slogin?shire=https%3A%2F%2Fwarwick.ac.uk%2Fsitebuilder2%2Fshire-read&providerId=urn%3Awarwick.ac.uk%3Asitebuilder2%3Aread%3Aservice&target=https%3A%2F%2Fwarwick.ac.uk%2Ffac%2Fcross_fac%2Ftia%2Fdata%2Fglascontest&status=notloggedin).
 
 **ISIC 2017**:  The dataset can be found [here](https://challenge.isic-archive.com/data/#2017). 
+
+
 
 
 
@@ -64,6 +70,8 @@ data
 │           ├── ISIC_0012092_segmentation.png
 |           ├── ...
 ```
+
+
 
 
 
