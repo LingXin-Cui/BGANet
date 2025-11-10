@@ -1,24 +1,17 @@
 # BGANet: A Medical Image Segmentation Network via Boundary-guided and Anti-aliasing
 
-:pushpin: This is an official PyTorch implementation of **BGANet: A Medical Image Segmentation Network via Boundary-guided and Anti-aliasing**
-<!--
-<p align="center">
-  <img src="./assets/logo_1.png" alt="" width="120" height="120">
-</p>
-<!--
-> [**U-KAN Makes Strong Backbone for Medical Image Segmentation and Generation**](https://arxiv.org/abs/2406.02918)<br>
-> [Chenxin Li](https://xggnet.github.io/)<sup>1\*</sup>, [Xinyu Liu](https://xinyuliu-jeffrey.github.io/)<sup>1\*</sup>, [Wuyang Li](https://wymancv.github.io/wuyang.github.io/)<sup>1\*</sup>, [Cheng Wang](https://scholar.google.com/citations?user=AM7gvyUAAAAJ&hl=en)<sup>1\*</sup>, [Hengyu Liu](https://liuhengyu321.github.io/)<sup>1</sup>, [Yifan Liu](https://yifliu3.github.io/)<sup>1</sup>, [Chen Zhen](https://franciszchen.github.io/)<sup>2</sup>, [Yixuan Yuan](https://www.ee.cuhk.edu.hk/~yxyuan/people/people.htm)<sup>1✉</sup><br> <sup>1</sup>The Chinese Univerisity of Hong Kong, <sup>2</sup>Centre for Artificial Intelligence and Robotics, Hong Kong
---!>
+📌 This is an official PyTorch implementation of **BGANet: A Medical Image Segmentation Network via Boundary-guided and Anti-aliasing**
+
 Our BGANet takes U-KAN [12] as the foundational framework. Fig. 2 illustrates its overall architecture. To address the challenge of difficulty in accurate segmentation caused by soft boundaries in medical images, we specifically designed the Learnable Anti-aliasing Block, the Boundary Learner, and the Boundary Guidance Module. The entire network follows the U-KAN settings and is divided into three parts: encoder layers, decoder layers, and a bottleneck layer. During the encoding stage, we introduce the Learnable Anti-aliasing Block to perform learnable anti-aliasing processing on the encoded features before downsampling, thereby reducing boundary misalignment during segmentation and the Boundary Learner is employed to extract boundary information from both shallow and deep features. During the decoding phase, the Boundary Guidance Module utilizes this learned boundary information in a cross-scale manner to guide precise segmentation of the target regions.
 
 <div align="center">
-    <img width="100%" alt="UKAN overview" src="assets/framework-1.jpg"/>
+    <img width="100%" alt="BGANet overview" src="assets/framework-1.jpg"/>
 </div>
 
 
 
 
-## 🛠Setup
+## Setup
 
 ```bash
 git clone https://github.com/LingXin-Cui/BGANet.git
@@ -33,7 +26,7 @@ pip install -r requirements.txt
 
 
 
-## 📚Data Preparation
+## Data Preparation
 **BUSI**:  The dataset can be found [here](https://www.kaggle.com/datasets/aryashah2k/breast-ultrasound-images-dataset). 
 
 **GLAS**:  The dataset can be found [here](https://websignon.warwick.ac.uk/origin/slogin?shire=https%3A%2F%2Fwarwick.ac.uk%2Fsitebuilder2%2Fshire-read&providerId=urn%3Awarwick.ac.uk%3Asitebuilder2%3Aread%3Aservice&target=https%3A%2F%2Fwarwick.ac.uk%2Ffac%2Fcross_fac%2Ftia%2Fdata%2Fglascontest&status=notloggedin).
