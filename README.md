@@ -82,8 +82,8 @@ Note that the resolution of GlaS is 512x512, differing with other datasets (256x
 
 
 
-## Evaluating BGANet
+## Testing BGANet
 Run the following scripts to 
 ```bash
-python val.py --name ${dataset}_BGANet --output_dir [YOUR_OUTPUT_DIR] 
+python test.py --name ${dataset}_BGANet --output_dir [YOUR_OUTPUT_DIR] 
 ```
