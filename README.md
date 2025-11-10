@@ -21,8 +21,7 @@ conda activate bganet
 pip install -r requirements.txt
 ```
 
-**Tips A**: We test the framework using pytorch=1.13.0, and the CUDA compile version=11.6. Other versions should be also fine but not totally ensured.
-
+**Tips A**: We test the framework using pytorch=1.13.0, and the CUDA compile version=11.6.
 
 
 
