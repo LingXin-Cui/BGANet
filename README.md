@@ -20,7 +20,7 @@ Our BGANet takes U-KAN [12] as the foundational framework. Fig. 2 illustrates it
 
 ```bash
 git clone https://github.com/LingXin-Cui/BGANet.git
-cd U-KAN
+cd BGANet
 conda create -n bganet python=3.10
 conda activate bganet
 pip install -r requirements.txt
@@ -67,7 +67,7 @@ data
 
 
 
-## ⏳Training Segmentation BGANet
+## Training BGANet
 
 You can simply train BGANet on a single GPU by specifing the dataset name ```--dataset``` and input size ```--input_size```.
 ```bash
@@ -82,7 +82,7 @@ Note that the resolution of GlaS is 512x512, differing with other datasets (256x
 
 
 
-## 🔖Evaluating Segmentation BGANet
+## Evaluating BGANet
 Run the following scripts to 
 ```bash
 python val.py --name ${dataset}_BGANet --output_dir [YOUR_OUTPUT_DIR] 
