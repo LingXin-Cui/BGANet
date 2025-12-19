@@ -275,9 +275,9 @@ def main():
 
     if config['name'] is None:
         if config['deep_supervision']:
-            config['name'] = '%s_%s_wDS' % (config['dataset'], config['arch'])
+            config['name'] = '%s_%s' % (config['dataset'], config['arch'])
         else:
-            config['name'] = '%s_%s_woDS' % (config['dataset'], config['arch'])
+            config['name'] = '%s_%s' % (config['dataset'], config['arch'])
 
     os.makedirs(f'{output_dir}/{exp_name}', exist_ok=True)
 
@@ -286,7 +286,7 @@ def main():
         print('%s: %s' % (key, config[key]))
     print('-' * 20)
 
-    # 将训练配置保存到一个 YAML 格式的文件中
+   
     with open(f'{output_dir}/{exp_name}/config.yml', 'w') as f:
         yaml.dump(config, f)
 
@@ -296,7 +296,7 @@ def main():
     else:
         criterion = losses.__dict__[config['loss']]().cuda()
 
-    # 启用 cudnn 的优化
+
     cudnn.benchmark = True
 
     # create model
@@ -352,7 +352,7 @@ def main():
 
     if dataset_name == 'BUSI':
         mask_ext = '_mask.png'
-    elif dataset_name == 'glas':
+    elif dataset_name == 'GlaS':
         mask_ext = '.png'
     elif dataset_name == 'CVC':
         mask_ext = '.png'
@@ -395,14 +395,7 @@ def main():
         mask_ext=mask_ext,
         num_classes=config['num_classes'],
         transform=val_transform)
-    """test_dataset = Dataset(
-        img_ids=test_img_ids,
-        img_dir=os.path.join(config['data_dir'], config['dataset'], 'test', 'images'),
-        mask_dir=os.path.join(config['data_dir'], config['dataset'], 'test', 'masks'),
-        img_ext=img_ext,
-        mask_ext=mask_ext,
-        num_classes=config['num_classes'],
-        transform=val_transform)"""
+
 
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
