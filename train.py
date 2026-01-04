@@ -169,7 +169,6 @@ def train(config, train_loader, model, criterion, optimizer):
             loss /= len(outputs)
 
             iou, dice, _ = iou_score(outputs[-1], target)
-            iou_, dice_, hd_, hd95_, recall_, specificity_, precision_ = indicators(outputs[-1], target)
 
         else:
             output, output_e = model(input)
@@ -177,7 +176,6 @@ def train(config, train_loader, model, criterion, optimizer):
             loss_e = dice_loss(output_e, edge)
             loss = loss_s + loss_e
             iou, dice, _ = iou_score(output, target)
-            iou_, dice_, hd_, hd95_, recall_, specificity_, precision_ = indicators(output, target)
 
         # compute gradient and do optimizing step
         optimizer.zero_grad()
@@ -441,8 +439,6 @@ def main():
 
         print('loss %.4f - iou %.4f - val_loss %.4f - val_iou %.4f'
               % (train_log['loss'], train_log['iou'], val_log['loss'], val_log['iou']))
-        """print('loss %.4f - iou %.4f - test_loss %.4f - test_iou %.4f'
-              % (train_log['loss'], train_log['iou'], test_log['loss'], test_log['iou']))"""
 
         log['epoch'].append(epoch)
         log['lr'].append(config['lr'])
