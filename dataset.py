@@ -39,7 +39,7 @@ class Dataset(torch.utils.data.Dataset):
             img = augmented['image']
             mask = augmented['mask']
         
-        img = img.astype('float32') / 255
+        img = img.astype('float32') 
         img = img.transpose(2, 0, 1)
         mask = mask.astype('float32') / 255
         mask = mask.transpose(2, 0, 1)
