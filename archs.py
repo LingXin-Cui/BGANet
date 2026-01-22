@@ -550,8 +550,8 @@ class EFM(nn.Module):
     def forward(self, t, s, e):
         if s.size() != e.size():
             e = F.interpolate(e, s.size()[2:], mode='bilinear', align_corners=False)
-        x = s * e + s
         x = x + t
+        x = x * e + x
         x = self.conv2d(x)
         x0 = self.branch0(x)
         x1 = self.branch1(x)
