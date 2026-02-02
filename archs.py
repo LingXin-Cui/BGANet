@@ -392,7 +392,6 @@ class Conv1x1(nn.Module):
         return x
 
 
-# 训练边缘检测
 class EAM(nn.Module):
     def __init__(self):
         super(EAM, self).__init__()
@@ -442,7 +441,6 @@ def get_freq_indices(method):
         mapper_y = all_bot_indices_y[:num_freq]
     else:
         raise NotImplementedError
-    # 返回频率选择的 x 和 y 索引列表，mapper_x 和 mapper_y
     return mapper_x, mapper_y
 
 
@@ -459,19 +457,8 @@ class MultiSpectralDCTLayer(nn.Module):
 
         self.num_freq = len(mapper_x)
 
-        # fixed DCT init
         self.register_buffer('weight', self.get_dct_filter(height, width, mapper_x, mapper_y, channel))
 
-        # fixed random init
-        # self.register_buffer('weight', torch.rand(channel, height, width))
-
-        # learnable DCT init
-        # self.register_parameter('weight', self.get_dct_filter(height, width, mapper_x, mapper_y, channel))
-
-        # learnable random init
-        # self.register_parameter('weight', torch.rand(channel, height, width))
-
-        # num_freq, h, w
 
     def forward(self, x):
         assert len(x.shape) == 4, 'x must been 4 dimensions, but got ' + str(len(x.shape))
@@ -507,24 +494,17 @@ class MultiSpectralDCTLayer(nn.Module):
 class MultiSpectralAttentionLayer(torch.nn.Module):
     def __init__(self, channel, dct_h, dct_w, reduction=16, freq_sel_method='top16'):
         super(MultiSpectralAttentionLayer, self).__init__()
-        self.reduction = reduction  # 压缩因子，用于通道数的降维
-        self.dct_h = dct_h  # 离散余弦变换 (DCT) 后的高度
-        self.dct_w = dct_w  # 离散余弦变换 (DCT) 后的宽度
+        self.reduction = reduction
+        self.dct_h = dct_h
+        self.dct_w = dct_w
 
-        # 根据频率选择方法（`freq_sel_method`）获取频率索引（`mapper_x` 和 `mapper_y`）
         mapper_x, mapper_y = get_freq_indices(freq_sel_method)
 
-        # 频率索引的数量（频率分量的个数）
         self.num_split = len(mapper_x)
-        # 对频率索引进行调整，使得频率空间统一为 7x7
         mapper_x = [temp_x * (dct_h // 7) for temp_x in mapper_x]
         mapper_y = [temp_y * (dct_w // 7) for temp_y in mapper_y]
-        # make the frequencies in different sizes are identical to a 7x7 frequency space
-        # eg, (2,2) in 14x14 is identical to (1,1) in 7x7
 
-        # 定义 DCT 层，用于提取频谱特征
         self.dct_layer = MultiSpectralDCTLayer(dct_h, dct_w, mapper_x, mapper_y, channel)
-        # 定义全连接层，作用是通过注意力机制生成通道权重
         self.fc = nn.Sequential(
             nn.Linear(channel, channel // reduction, bias=False),
             nn.ReLU(inplace=True),
@@ -535,18 +515,10 @@ class MultiSpectralAttentionLayer(torch.nn.Module):
     def forward(self, x):
         n, c, h, w = x.shape
         x_pooled = x
-        # 如果图像的高度和宽度不等于 DCT 目标尺寸（dct_h 和 dct_w），进行自适应平均池化
         if h != self.dct_h or w != self.dct_w:
             x_pooled = torch.nn.functional.adaptive_avg_pool2d(x, (self.dct_h, self.dct_w))
-            # If you have concerns about one-line-change, don't worry.   :)
-            # In the ImageNet models, this line will never be triggered.
-            # This is for compatibility in instance segmentation and object detection.
-        # 将池化后的图像输入到 DCT 层，提取频谱特征
         y = self.dct_layer(x_pooled)
-
-        # 使用全连接层计算通道注意力权重
         y = self.fc(y).view(n, c, 1, 1)
-        # 将输入图像与通道注意力权重相乘，实现加权融合
         return x * y.expand_as(x)
 
 
@@ -646,10 +618,6 @@ class BGANet(nn.Module):
         self.final = nn.Conv2d(embed_dims[0] // 8, num_classes, kernel_size=1)
         self.soft = nn.Softmax(dim=1)
 
-        # self.predictor1 = nn.Conv2d(64, 1, 1)
-        # self.predictor2 = nn.Conv2d(128, 1, 1)
-        # self.predictor3 = nn.Conv2d(256, 1, 1)
-
     def forward(self, x):
 
         B = x.shape[0]
@@ -657,15 +625,12 @@ class BGANet(nn.Module):
         ### Conv Stage
 
         ### Stage 1
-        # out = F.relu(F.max_pool2d(self.encoder1(x), 2, 2)) #[8, 16, 128, 128]
         out = F.relu(F.max_pool2d(self.daf1(self.encoder1(x)), 2, 2))
         t1 = out
         ### Stage 2
-        # out = F.relu(F.max_pool2d(self.encoder2(out), 2, 2)) #[8, 32, 64, 64]
         out = F.relu(F.max_pool2d(self.daf2(self.encoder2(out)), 2, 2))
         t2 = out
         ### Stage 3
-        # out = F.relu(F.max_pool2d(self.encoder3(out), 2, 2)) #[8, 128, 32, 32]
         out = F.relu(F.max_pool2d(self.daf3(self.encoder3(out)), 2, 2))
         t3 = out
 
@@ -677,10 +642,10 @@ class BGANet(nn.Module):
             out = blk(out, H, W)
         out = self.norm3(out)
         out = out.reshape(B, H, W, -1).permute(0, 3, 1, 2).contiguous()
-        t4 = out  # print(t4.shape) [8, 160, 16, 16]
+        t4 = out
 
-        edge = self.eam(t3, t1)  # [8, 1, 128, 128]
-        edge_att = torch.sigmoid(edge)  # [8, 1, 128, 128]
+        edge = self.eam(t3, t1)
+        edge_att = torch.sigmoid(edge)
         ### Bottleneck
 
         out, H, W = self.patch_embed4(out)
@@ -696,13 +661,13 @@ class BGANet(nn.Module):
         _, _, H, W = out.shape
         out = out.flatten(2).transpose(1, 2)
         for i, blk in enumerate(self.dblock1):
-            out = blk(out, H, W)  # print(out.shape) [8, 256, 160]
+            out = blk(out, H, W)
 
         ### Stage 3
         out = self.dnorm3(out)
         out = out.reshape(B, H, W, -1).permute(0, 3, 1, 2).contiguous()
         out = F.relu(F.interpolate(self.decoder2(out), scale_factor=(2, 2), mode='bilinear'))
-        # out = torch.add(out,t3)
+
         out = self.efm1(t3, out, edge_att)
         _, _, H, W = out.shape
         out = out.flatten(2).transpose(1, 2)
@@ -712,19 +677,15 @@ class BGANet(nn.Module):
 
         out = self.dnorm4(out)
         out = out.reshape(B, H, W, -1).permute(0, 3, 1, 2).contiguous()
-        # out = self.efm1(out, edge_att)
-        # print(out.shape) [8, 128, 32, 32]
+
 
         out = F.relu(F.interpolate(self.decoder3(out), scale_factor=(2, 2), mode='bilinear'))
-        # print(out.shape) [8, 32, 64, 64]
-        # out = torch.add(out,t2)
+
         out = self.efm2(t2, out, edge_att)
         out = F.relu(F.interpolate(self.decoder4(out), scale_factor=(2, 2), mode='bilinear'))
-        # print(out.shape) [8, 16, 128, 128]
-        # out = torch.add(out,t1)
+
         out = self.efm3(t1, out, edge_att)
         out = F.relu(F.interpolate(self.decoder5(out), scale_factor=(2, 2), mode='bilinear'))
-        # print(out.shape) [8, 16, 256, 256]
         out = self.final(out)
 
         oe = F.interpolate(edge_att, scale_factor=(2, 2), mode='bilinear', align_corners=False)
