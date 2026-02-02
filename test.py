@@ -19,20 +19,22 @@ import archs
 from dataset import Dataset
 from metrics import iou_score
 from utils import AverageMeter
-from albumentations import RandomRotate90,Resize
+from albumentations import RandomRotate90, Resize
 import time
 
 from PIL import Image
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--name', default=None, help='model name')
     parser.add_argument('--output_dir', default='./output', help='ouput dir')
-            
+
     args = parser.parse_args()
 
     return args
+
 
 def seed_torch(seed=1029):
     random.seed(seed)
@@ -52,14 +54,15 @@ def main():
     with open(f'{args.output_dir}/{args.name}/config.yml', 'r') as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
 
-    print('-'*20)
+    print('-' * 20)
     for key in config.keys():
         print('%s: %s' % (key, str(config[key])))
-    print('-'*20)
+    print('-' * 20)
 
     cudnn.benchmark = True
 
-    model = archs.__dict__[config['arch']](config['num_classes'], config['input_channels'], config['deep_supervision'], embed_dims=config['input_list'])
+    model = archs.__dict__[config['arch']](config['num_classes'], config['input_channels'], config['deep_supervision'],
+                                           embed_dims=config['input_list'])
 
     model = model.cuda()
 
@@ -80,7 +83,7 @@ def main():
 
     ckpt = torch.load(f'{args.output_dir}/{args.name}/val_model.pth')
 
-    try:        
+    try:
         model.load_state_dict(ckpt)
     except:
         print("Pretrained model keys:", ckpt.keys())
@@ -95,7 +98,7 @@ def main():
             print(f"Key: {key}")
 
         model.load_state_dict(ckpt, strict=False)
-        
+
     model.eval()
 
     test_transform = Compose([
@@ -105,7 +108,7 @@ def main():
 
     test_dataset = Dataset(
         img_ids=test_img_ids,
-        img_dir=os.path.join(config['data_dir'] ,config['dataset'], 'test', 'images'),
+        img_dir=os.path.join(config['data_dir'], config['dataset'], 'test', 'images'),
         mask_dir=os.path.join(config['data_dir'], config['dataset'], 'test', 'masks'),
         img_ext=img_ext,
         mask_ext=mask_ext,
@@ -117,8 +120,6 @@ def main():
         shuffle=False,
         num_workers=config['num_workers'],
         drop_last=False)
-
-
 
     iou_avg_meter = AverageMeter()
     dice_avg_meter = AverageMeter()
@@ -132,7 +133,7 @@ def main():
             model = model.cuda()
             # compute output
             output, output_e = model(input)
-            #output = model(input)
+            # output = model(input)
 
             iou, dice, hd95_ = iou_score(output, target)
             iou_avg_meter.update(iou, input.size(0))
@@ -140,8 +141,8 @@ def main():
             hd95_avg_meter.update(hd95_, input.size(0))
 
             output = torch.sigmoid(output).cpu().numpy()
-            output[output>=0.5]=1
-            output[output<0.5]=0
+            output[output >= 0.5] = 1
+            output[output < 0.5] = 0
 
             os.makedirs(os.path.join(args.output_dir, config['name'], 'out'), exist_ok=True)
             for pred, img_id in zip(output, meta['img_id']):
@@ -150,12 +151,10 @@ def main():
                 img = Image.fromarray(pred_np, 'L')
                 img.save(os.path.join(args.output_dir, config['name'], 'out/{}.png'.format(img_id)))
 
-    
     print(config['name'])
     print('IoU: %.4f' % iou_avg_meter.avg)
     print('Dice: %.4f' % dice_avg_meter.avg)
     print('HD95: %.4f' % hd95_avg_meter.avg)
-
 
 
 if __name__ == '__main__':

@@ -32,54 +32,54 @@ class KANLayer(nn.Module):
         out_features = out_features or in_features
         hidden_features = hidden_features or in_features
         self.dim = in_features
-        
-        grid_size=5
-        spline_order=3
-        scale_noise=0.1
-        scale_base=1.0
-        scale_spline=1.0
-        base_activation=torch.nn.SiLU
-        grid_eps=0.02
-        grid_range=[-1, 1]
+
+        grid_size = 5
+        spline_order = 3
+        scale_noise = 0.1
+        scale_base = 1.0
+        scale_spline = 1.0
+        base_activation = torch.nn.SiLU
+        grid_eps = 0.02
+        grid_range = [-1, 1]
 
         if not no_kan:
             self.fc1 = KANLinear(
-                        in_features,
-                        hidden_features,
-                        grid_size=grid_size,
-                        spline_order=spline_order,
-                        scale_noise=scale_noise,
-                        scale_base=scale_base,
-                        scale_spline=scale_spline,
-                        base_activation=base_activation,
-                        grid_eps=grid_eps,
-                        grid_range=grid_range,
-                    )
+                in_features,
+                hidden_features,
+                grid_size=grid_size,
+                spline_order=spline_order,
+                scale_noise=scale_noise,
+                scale_base=scale_base,
+                scale_spline=scale_spline,
+                base_activation=base_activation,
+                grid_eps=grid_eps,
+                grid_range=grid_range,
+            )
             self.fc2 = KANLinear(
-                        hidden_features,
-                        out_features,
-                        grid_size=grid_size,
-                        spline_order=spline_order,
-                        scale_noise=scale_noise,
-                        scale_base=scale_base,
-                        scale_spline=scale_spline,
-                        base_activation=base_activation,
-                        grid_eps=grid_eps,
-                        grid_range=grid_range,
-                    )
+                hidden_features,
+                out_features,
+                grid_size=grid_size,
+                spline_order=spline_order,
+                scale_noise=scale_noise,
+                scale_base=scale_base,
+                scale_spline=scale_spline,
+                base_activation=base_activation,
+                grid_eps=grid_eps,
+                grid_range=grid_range,
+            )
             self.fc3 = KANLinear(
-                        hidden_features,
-                        out_features,
-                        grid_size=grid_size,
-                        spline_order=spline_order,
-                        scale_noise=scale_noise,
-                        scale_base=scale_base,
-                        scale_spline=scale_spline,
-                        base_activation=base_activation,
-                        grid_eps=grid_eps,
-                        grid_range=grid_range,
-                    )
-            # # TODO   
+                hidden_features,
+                out_features,
+                grid_size=grid_size,
+                spline_order=spline_order,
+                scale_noise=scale_noise,
+                scale_base=scale_base,
+                scale_spline=scale_spline,
+                base_activation=base_activation,
+                grid_eps=grid_eps,
+                grid_range=grid_range,
+            )
+            # # TODO
             # self.fc4 = KANLinear(
             #             hidden_features,
             #             out_features,
@@ -91,7 +91,7 @@ class KANLayer(nn.Module):
             #             base_activation=base_activation,
             #             grid_eps=grid_eps,
             #             grid_range=grid_range,
-            #         )   
+            #         )
 
         else:
             self.fc1 = nn.Linear(in_features, hidden_features)
@@ -101,14 +101,13 @@ class KANLayer(nn.Module):
         # TODO
         # self.fc1 = nn.Linear(in_features, hidden_features)
 
-
         self.dwconv_1 = DW_bn_relu(hidden_features)
         self.dwconv_2 = DW_bn_relu(hidden_features)
         self.dwconv_3 = DW_bn_relu(hidden_features)
 
         # # TODO
         # self.dwconv_4 = DW_bn_relu(hidden_features)
-    
+
         self.drop = nn.Dropout(drop)
 
         self.apply(self._init_weights)
@@ -127,27 +126,27 @@ class KANLayer(nn.Module):
             m.weight.data.normal_(0, math.sqrt(2.0 / fan_out))
             if m.bias is not None:
                 m.bias.data.zero_()
-    
 
     def forward(self, x, H, W):
         # pdb.set_trace()
         B, N, C = x.shape
 
-        x = self.fc1(x.reshape(B*N,C))
-        x = x.reshape(B,N,C).contiguous()
+        x = self.fc1(x.reshape(B * N, C))
+        x = x.reshape(B, N, C).contiguous()
         x = self.dwconv_1(x, H, W)
-        x = self.fc2(x.reshape(B*N,C))
-        x = x.reshape(B,N,C).contiguous()
+        x = self.fc2(x.reshape(B * N, C))
+        x = x.reshape(B, N, C).contiguous()
         x = self.dwconv_2(x, H, W)
-        x = self.fc3(x.reshape(B*N,C))
-        x = x.reshape(B,N,C).contiguous()
+        x = self.fc3(x.reshape(B * N, C))
+        x = x.reshape(B, N, C).contiguous()
         x = self.dwconv_3(x, H, W)
 
         # # TODO
         # x = x.reshape(B,N,C).contiguous()
         # x = self.dwconv_4(x, H, W)
-    
+
         return x
+
 
 class KANBlock(nn.Module):
     def __init__(self, dim, drop=0., drop_path=0., act_layer=nn.GELU, norm_layer=nn.LayerNorm, no_kan=False):
@@ -157,7 +156,8 @@ class KANBlock(nn.Module):
         self.norm2 = norm_layer(dim)
         mlp_hidden_dim = int(dim)
 
-        self.layer = KANLayer(in_features=dim, hidden_features=mlp_hidden_dim, act_layer=act_layer, drop=drop, no_kan=no_kan)
+        self.layer = KANLayer(in_features=dim, hidden_features=mlp_hidden_dim, act_layer=act_layer, drop=drop,
+                              no_kan=no_kan)
 
         self.apply(self._init_weights)
 
@@ -195,6 +195,7 @@ class DWConv(nn.Module):
 
         return x
 
+
 class DW_bn_relu(nn.Module):
     def __init__(self, dim=768):
         super(DW_bn_relu, self).__init__()
@@ -211,6 +212,7 @@ class DW_bn_relu(nn.Module):
         x = x.flatten(2).transpose(1, 2)
 
         return x
+
 
 class PatchEmbed(nn.Module):
     """ Image to Patch Embedding
@@ -270,6 +272,7 @@ class ConvLayer(nn.Module):
     def forward(self, input):
         return self.conv(input)
 
+
 class D_ConvLayer(nn.Module):
     def __init__(self, in_ch, out_ch):
         super(D_ConvLayer, self).__init__()
@@ -297,12 +300,12 @@ class FLC_Pooling(nn.Module):
             _n = len(k_list)
             for i in range(_n):
                 freq_weight_conv = nn.Conv2d(in_channels=in_channels,
-                                            out_channels=self.spatial_group,
-                                            stride=1,
-                                            kernel_size=3,
-                                            groups=self.spatial_group,
-                                            padding=3//2,
-                                            bias=True)
+                                             out_channels=self.spatial_group,
+                                             stride=1,
+                                             kernel_size=3,
+                                             groups=self.spatial_group,
+                                             padding=3 // 2,
+                                             bias=True)
                 if init == 'zero':
                     freq_weight_conv.weight.data.zero_()
                     freq_weight_conv.bias.data.zero_()
@@ -311,7 +314,6 @@ class FLC_Pooling(nn.Module):
                     pass
                 self.freq_weight_conv_list.append(freq_weight_conv)
         self.act = act
-
 
     def sp_act(self, freq_weight):
         if self.act == 'sigmoid':
@@ -329,7 +331,8 @@ class FLC_Pooling(nn.Module):
         x_fft = torch.fft.fftshift(torch.fft.fft2(x, norm='ortho'))
         for idx, freq in enumerate(self.k_list):
             mask = torch.zeros_like(x[:, 0:1, :, :], device=x.device)
-            mask[:, :, round(h / 2 - h / (2 * freq)):round(h / 2 + h / (2 * freq)), round(w / 2 - w / (2 * freq)):round(w / 2 + w / (2 * freq))] = 1.0
+            mask[:, :, round(h / 2 - h / (2 * freq)):round(h / 2 + h / (2 * freq)),
+            round(w / 2 - w / (2 * freq)):round(w / 2 + w / (2 * freq))] = 1.0
             # mask[:, :, round(h / 2 - h * self.freq_thres):round(h / 2 + h * self.freq_thres),round(w / 2 - w * self.freq_thres):round(w / 2 + w * self.freq_thres)] = 1.0
             low_part = torch.fft.ifft2(torch.fft.ifftshift(x_fft * mask), norm='ortho').real
             high_part = pre_x - low_part
@@ -337,11 +340,13 @@ class FLC_Pooling(nn.Module):
             freq_weight = self.freq_weight_conv_list[idx](x)
             freq_weight = self.sp_act(freq_weight)
             # tmp = freq_weight[:, :, idx:idx+1] * high_part.reshape(b, self.spatial_group, -1, h, w)
-            tmp = freq_weight.reshape(b, self.spatial_group, -1, h, w) * high_part.reshape(b, self.spatial_group, -1, h, w)
+            tmp = freq_weight.reshape(b, self.spatial_group, -1, h, w) * high_part.reshape(b, self.spatial_group, -1, h,
+                                                                                           w)
             x_list.append(tmp.reshape(b, -1, h, w))
         x_list.append(pre_x)
         x = sum(x_list)
         return x
+
 
 class ConvBNR(nn.Module):
     def __init__(self, inplanes, planes, kernel_size=3, stride=1, dilation=1, bias=False):
@@ -355,6 +360,7 @@ class ConvBNR(nn.Module):
 
     def forward(self, x):
         return self.block(x)
+
 
 class BasicConv2d(nn.Module):
     def __init__(self, in_planes, out_planes, kernel_size, stride=1, padding=0, dilation=1):
@@ -370,6 +376,7 @@ class BasicConv2d(nn.Module):
         x = self.bn(x)
         return x
 
+
 class Conv1x1(nn.Module):
     def __init__(self, inplanes, planes):
         super(Conv1x1, self).__init__()
@@ -384,6 +391,8 @@ class Conv1x1(nn.Module):
 
         return x
 
+
+# 训练边缘检测
 class EAM(nn.Module):
     def __init__(self):
         super(EAM, self).__init__()
@@ -404,30 +413,38 @@ class EAM(nn.Module):
 
         return out
 
+
 def get_freq_indices(method):
-    assert method in ['top1','top2','top4','top8','top16','top32',
-                      'bot1','bot2','bot4','bot8','bot16','bot32',
-                      'low1','low2','low4','low8','low16','low32']
+    assert method in ['top1', 'top2', 'top4', 'top8', 'top16', 'top32',
+                      'bot1', 'bot2', 'bot4', 'bot8', 'bot16', 'bot32',
+                      'low1', 'low2', 'low4', 'low8', 'low16', 'low32']
     num_freq = int(method[3:])
     if 'top' in method:
-        all_top_indices_x = [0,0,6,0,0,1,1,4,5,1,3,0,0,0,3,2,4,6,3,5,5,2,6,5,5,3,3,4,2,2,6,1]
-        all_top_indices_y = [0,1,0,5,2,0,2,0,0,6,0,4,6,3,5,2,6,3,3,3,5,1,1,2,4,2,1,1,3,0,5,3]
+        all_top_indices_x = [0, 0, 6, 0, 0, 1, 1, 4, 5, 1, 3, 0, 0, 0, 3, 2, 4, 6, 3, 5, 5, 2, 6, 5, 5, 3, 3, 4, 2, 2,
+                             6, 1]
+        all_top_indices_y = [0, 1, 0, 5, 2, 0, 2, 0, 0, 6, 0, 4, 6, 3, 5, 2, 6, 3, 3, 3, 5, 1, 1, 2, 4, 2, 1, 1, 3, 0,
+                             5, 3]
         mapper_x = all_top_indices_x[:num_freq]
         mapper_y = all_top_indices_y[:num_freq]
     elif 'low' in method:
-        all_low_indices_x = [0,0,1,1,0,2,2,1,2,0,3,4,0,1,3,0,1,2,3,4,5,0,1,2,3,4,5,6,1,2,3,4]
-        all_low_indices_y = [0,1,0,1,2,0,1,2,2,3,0,0,4,3,1,5,4,3,2,1,0,6,5,4,3,2,1,0,6,5,4,3]
+        all_low_indices_x = [0, 0, 1, 1, 0, 2, 2, 1, 2, 0, 3, 4, 0, 1, 3, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 6, 1, 2,
+                             3, 4]
+        all_low_indices_y = [0, 1, 0, 1, 2, 0, 1, 2, 2, 3, 0, 0, 4, 3, 1, 5, 4, 3, 2, 1, 0, 6, 5, 4, 3, 2, 1, 0, 6, 5,
+                             4, 3]
         mapper_x = all_low_indices_x[:num_freq]
         mapper_y = all_low_indices_y[:num_freq]
     elif 'bot' in method:
-        all_bot_indices_x = [6,1,3,3,2,4,1,2,4,4,5,1,4,6,2,5,6,1,6,2,2,4,3,3,5,5,6,2,5,5,3,6]
-        all_bot_indices_y = [6,4,4,6,6,3,1,4,4,5,6,5,2,2,5,1,4,3,5,0,3,1,1,2,4,2,1,1,5,3,3,3]
+        all_bot_indices_x = [6, 1, 3, 3, 2, 4, 1, 2, 4, 4, 5, 1, 4, 6, 2, 5, 6, 1, 6, 2, 2, 4, 3, 3, 5, 5, 6, 2, 5, 5,
+                             3, 6]
+        all_bot_indices_y = [6, 4, 4, 6, 6, 3, 1, 4, 4, 5, 6, 5, 2, 2, 5, 1, 4, 3, 5, 0, 3, 1, 1, 2, 4, 2, 1, 1, 5, 3,
+                             3, 3]
         mapper_x = all_bot_indices_x[:num_freq]
         mapper_y = all_bot_indices_y[:num_freq]
     else:
         raise NotImplementedError
-
+    # 返回频率选择的 x 和 y 索引列表，mapper_x 和 mapper_y
     return mapper_x, mapper_y
+
 
 class MultiSpectralDCTLayer(nn.Module):
     """
@@ -486,26 +503,28 @@ class MultiSpectralDCTLayer(nn.Module):
 
         return dct_filter
 
+
 class MultiSpectralAttentionLayer(torch.nn.Module):
-    def __init__(self, channel, dct_h, dct_w, reduction = 16, freq_sel_method = 'top16'):
+    def __init__(self, channel, dct_h, dct_w, reduction=16, freq_sel_method='top16'):
         super(MultiSpectralAttentionLayer, self).__init__()
-        self.reduction = reduction
-        self.dct_h = dct_h
-        self.dct_w = dct_w
+        self.reduction = reduction  # 压缩因子，用于通道数的降维
+        self.dct_h = dct_h  # 离散余弦变换 (DCT) 后的高度
+        self.dct_w = dct_w  # 离散余弦变换 (DCT) 后的宽度
 
-
+        # 根据频率选择方法（`freq_sel_method`）获取频率索引（`mapper_x` 和 `mapper_y`）
         mapper_x, mapper_y = get_freq_indices(freq_sel_method)
 
-
+        # 频率索引的数量（频率分量的个数）
         self.num_split = len(mapper_x)
-
+        # 对频率索引进行调整，使得频率空间统一为 7x7
         mapper_x = [temp_x * (dct_h // 7) for temp_x in mapper_x]
         mapper_y = [temp_y * (dct_w // 7) for temp_y in mapper_y]
         # make the frequencies in different sizes are identical to a 7x7 frequency space
         # eg, (2,2) in 14x14 is identical to (1,1) in 7x7
 
+        # 定义 DCT 层，用于提取频谱特征
         self.dct_layer = MultiSpectralDCTLayer(dct_h, dct_w, mapper_x, mapper_y, channel)
-
+        # 定义全连接层，作用是通过注意力机制生成通道权重
         self.fc = nn.Sequential(
             nn.Linear(channel, channel // reduction, bias=False),
             nn.ReLU(inplace=True),
@@ -514,18 +533,20 @@ class MultiSpectralAttentionLayer(torch.nn.Module):
         )
 
     def forward(self, x):
-        n,c,h,w = x.shape
+        n, c, h, w = x.shape
         x_pooled = x
-
+        # 如果图像的高度和宽度不等于 DCT 目标尺寸（dct_h 和 dct_w），进行自适应平均池化
         if h != self.dct_h or w != self.dct_w:
             x_pooled = torch.nn.functional.adaptive_avg_pool2d(x, (self.dct_h, self.dct_w))
             # If you have concerns about one-line-change, don't worry.   :)
             # In the ImageNet models, this line will never be triggered.
             # This is for compatibility in instance segmentation and object detection.
-
+        # 将池化后的图像输入到 DCT 层，提取频谱特征
         y = self.dct_layer(x_pooled)
-        y = self.fc(y).view(n, c, 1, 1)
 
+        # 使用全连接层计算通道注意力权重
+        y = self.fc(y).view(n, c, 1, 1)
+        # 将输入图像与通道注意力权重相乘，实现加权融合
         return x * y.expand_as(x)
 
 
@@ -533,24 +554,26 @@ class EFM(nn.Module):
     def __init__(self, channel, reduction=8):
         super(EFM, self).__init__()
         c2wh = dict([(16, 128), (32, 64), (128, 32)])
-        self.conv2d =ConvBNR(channel, channel, 3)
-        self.conv_2d = ConvBNR(channel*3, channel, 3)
-        self.att =MultiSpectralAttentionLayer(channel, c2wh[channel], c2wh[channel],  reduction=reduction, freq_sel_method = 'top16')
+        self.conv2d = ConvBNR(channel, channel, 3)
+        self.conv_2d = ConvBNR(channel * 3, channel, 3)
+        self.att = MultiSpectralAttentionLayer(channel, c2wh[channel], c2wh[channel], reduction=reduction,
+                                               freq_sel_method='top16')
         self.branch0 = nn.Sequential(
-            BasicConv2d(channel, channel,kernel_size=3, stride=1,padding=1),
+            BasicConv2d(channel, channel, kernel_size=3, stride=1, padding=1),
         )
         self.branch1 = nn.Sequential(
-            BasicConv2d(channel, channel,kernel_size=3, stride=1,padding=1),
+            BasicConv2d(channel, channel, kernel_size=3, stride=1, padding=1),
             BasicConv2d(channel, channel, 3, padding=3, dilation=3)
         )
         self.branch2 = nn.Sequential(
-            BasicConv2d(channel, channel,kernel_size=3, stride=1,padding=1),
+            BasicConv2d(channel, channel, kernel_size=3, stride=1, padding=1),
             BasicConv2d(channel, channel, 3, padding=5, dilation=5)
         )
+
     def forward(self, t, s, e):
         if s.size() != e.size():
             e = F.interpolate(e, s.size()[2:], mode='bilinear', align_corners=False)
-        x = x + t
+        x = s + t
         x = x * e + x
         x = self.conv2d(x)
         x0 = self.branch0(x)
@@ -561,9 +584,11 @@ class EFM(nn.Module):
         x = self.att(x)
         return x
 
+
 class BGANet(nn.Module):
-    def __init__(self, num_classes, input_channels=3, deep_supervision=False, img_size=224, patch_size=16, in_chans=3, embed_dims=[256, 320, 512], no_kan=False,
-    drop_rate=0., drop_path_rate=0., norm_layer=nn.LayerNorm, depths=[1, 1, 1], **kwargs):
+    def __init__(self, num_classes, input_channels=3, deep_supervision=False, img_size=224, patch_size=16, in_chans=3,
+                 embed_dims=[256, 320, 512], no_kan=False,
+                 drop_rate=0., drop_path_rate=0., norm_layer=nn.LayerNorm, depths=[1, 1, 1], **kwargs):
         super().__init__()
 
         kan_input_dim = embed_dims[0]
@@ -572,9 +597,9 @@ class BGANet(nn.Module):
         self.efm2 = EFM(32, reduction=8)
         self.efm3 = EFM(16, reduction=8)
 
-        self.encoder1 = ConvLayer(3, kan_input_dim//8)  
-        self.encoder2 = ConvLayer(kan_input_dim//8, kan_input_dim//4)  
-        self.encoder3 = ConvLayer(kan_input_dim//4, kan_input_dim)
+        self.encoder1 = ConvLayer(3, kan_input_dim // 8)
+        self.encoder2 = ConvLayer(kan_input_dim // 8, kan_input_dim // 4)
+        self.encoder3 = ConvLayer(kan_input_dim // 4, kan_input_dim)
 
         self.norm3 = norm_layer(embed_dims[1])
         self.norm4 = norm_layer(embed_dims[2])
@@ -588,56 +613,60 @@ class BGANet(nn.Module):
         dpr = [x.item() for x in torch.linspace(0, drop_path_rate, sum(depths))]
 
         self.block1 = nn.ModuleList([KANBlock(
-            dim=embed_dims[1], 
+            dim=embed_dims[1],
             drop=drop_rate, drop_path=dpr[0], norm_layer=norm_layer
-            )])
+        )])
 
         self.block2 = nn.ModuleList([KANBlock(
             dim=embed_dims[2],
             drop=drop_rate, drop_path=dpr[1], norm_layer=norm_layer
-            )])
+        )])
 
         self.dblock1 = nn.ModuleList([KANBlock(
-            dim=embed_dims[1], 
+            dim=embed_dims[1],
             drop=drop_rate, drop_path=dpr[0], norm_layer=norm_layer
-            )])
+        )])
 
         self.dblock2 = nn.ModuleList([KANBlock(
-            dim=embed_dims[0], 
+            dim=embed_dims[0],
             drop=drop_rate, drop_path=dpr[1], norm_layer=norm_layer
-            )])
+        )])
 
-        self.patch_embed3 = PatchEmbed(img_size=img_size // 4, patch_size=3, stride=2, in_chans=embed_dims[0], embed_dim=embed_dims[1])
-        self.patch_embed4 = PatchEmbed(img_size=img_size // 8, patch_size=3, stride=2, in_chans=embed_dims[1], embed_dim=embed_dims[2])
+        self.patch_embed3 = PatchEmbed(img_size=img_size // 4, patch_size=3, stride=2, in_chans=embed_dims[0],
+                                       embed_dim=embed_dims[1])
+        self.patch_embed4 = PatchEmbed(img_size=img_size // 8, patch_size=3, stride=2, in_chans=embed_dims[1],
+                                       embed_dim=embed_dims[2])
 
-        self.decoder1 = D_ConvLayer(embed_dims[2], embed_dims[1])  #256,160
-        self.decoder2 = D_ConvLayer(embed_dims[1], embed_dims[0])  #160,128
-        self.decoder3 = D_ConvLayer(embed_dims[0], embed_dims[0]//4)  #128,32
-        self.decoder4 = D_ConvLayer(embed_dims[0]//4, embed_dims[0]//8) #32,16
-        self.decoder5 = D_ConvLayer(embed_dims[0]//8, embed_dims[0]//8) #16,16
+        self.decoder1 = D_ConvLayer(embed_dims[2], embed_dims[1])  # 256,160
+        self.decoder2 = D_ConvLayer(embed_dims[1], embed_dims[0])  # 160,128
+        self.decoder3 = D_ConvLayer(embed_dims[0], embed_dims[0] // 4)  # 128,32
+        self.decoder4 = D_ConvLayer(embed_dims[0] // 4, embed_dims[0] // 8)  # 32,16
+        self.decoder5 = D_ConvLayer(embed_dims[0] // 8, embed_dims[0] // 8)  # 16,16
 
-        self.final = nn.Conv2d(embed_dims[0]//8, num_classes, kernel_size=1)
-        self.soft = nn.Softmax(dim =1)
+        self.final = nn.Conv2d(embed_dims[0] // 8, num_classes, kernel_size=1)
+        self.soft = nn.Softmax(dim=1)
 
-        #self.predictor1 = nn.Conv2d(64, 1, 1)
-        #self.predictor2 = nn.Conv2d(128, 1, 1)
-        #self.predictor3 = nn.Conv2d(256, 1, 1)
+        # self.predictor1 = nn.Conv2d(64, 1, 1)
+        # self.predictor2 = nn.Conv2d(128, 1, 1)
+        # self.predictor3 = nn.Conv2d(256, 1, 1)
 
+    def forward(self, x):
 
-    def forward(self, x ):
-        
         B = x.shape[0]
         ### Encoder
         ### Conv Stage
 
         ### Stage 1
+        # out = F.relu(F.max_pool2d(self.encoder1(x), 2, 2)) #[8, 16, 128, 128]
         out = F.relu(F.max_pool2d(self.daf1(self.encoder1(x)), 2, 2))
         t1 = out
         ### Stage 2
+        # out = F.relu(F.max_pool2d(self.encoder2(out), 2, 2)) #[8, 32, 64, 64]
         out = F.relu(F.max_pool2d(self.daf2(self.encoder2(out)), 2, 2))
         t2 = out
         ### Stage 3
-        out  = F.relu(F.max_pool2d(self.daf3(self.encoder3(out)), 2, 2))
+        # out = F.relu(F.max_pool2d(self.encoder3(out), 2, 2)) #[8, 128, 32, 32]
+        out = F.relu(F.max_pool2d(self.daf3(self.encoder3(out)), 2, 2))
         t3 = out
 
         ### Tokenized KAN Stage
@@ -648,49 +677,55 @@ class BGANet(nn.Module):
             out = blk(out, H, W)
         out = self.norm3(out)
         out = out.reshape(B, H, W, -1).permute(0, 3, 1, 2).contiguous()
-        t4 = out  #print(t4.shape) [8, 160, 16, 16]
+        t4 = out  # print(t4.shape) [8, 160, 16, 16]
 
-        edge = self.eam(t3, t1) #[8, 1, 128, 128]
-        edge_att = torch.sigmoid(edge) #[8, 1, 128, 128]
+        edge = self.eam(t3, t1)  # [8, 1, 128, 128]
+        edge_att = torch.sigmoid(edge)  # [8, 1, 128, 128]
         ### Bottleneck
 
-        out, H, W= self.patch_embed4(out)
+        out, H, W = self.patch_embed4(out)
         for i, blk in enumerate(self.block2):
             out = blk(out, H, W)
         out = self.norm4(out)
         out = out.reshape(B, H, W, -1).permute(0, 3, 1, 2).contiguous()
 
         ### Stage 4
-        out = F.relu(F.interpolate(self.decoder1(out), scale_factor=(2,2), mode ='bilinear'))
+        out = F.relu(F.interpolate(self.decoder1(out), scale_factor=(2, 2), mode='bilinear'))
 
         out = torch.add(out, t4)
         _, _, H, W = out.shape
-        out = out.flatten(2).transpose(1,2)
+        out = out.flatten(2).transpose(1, 2)
         for i, blk in enumerate(self.dblock1):
-            out = blk(out, H, W)#print(out.shape) [8, 256, 160]
+            out = blk(out, H, W)  # print(out.shape) [8, 256, 160]
 
         ### Stage 3
         out = self.dnorm3(out)
         out = out.reshape(B, H, W, -1).permute(0, 3, 1, 2).contiguous()
-        out = F.relu(F.interpolate(self.decoder2(out),scale_factor=(2,2),mode ='bilinear'))
-        #out = torch.add(out,t3)
+        out = F.relu(F.interpolate(self.decoder2(out), scale_factor=(2, 2), mode='bilinear'))
+        # out = torch.add(out,t3)
         out = self.efm1(t3, out, edge_att)
-        _,_,H,W = out.shape
-        out = out.flatten(2).transpose(1,2)
-        
+        _, _, H, W = out.shape
+        out = out.flatten(2).transpose(1, 2)
+
         for i, blk in enumerate(self.dblock2):
-            out = blk(out, H, W)# print(out.shape) [8, 1024, 128]
+            out = blk(out, H, W)  # print(out.shape) [8, 1024, 128]
 
         out = self.dnorm4(out)
         out = out.reshape(B, H, W, -1).permute(0, 3, 1, 2).contiguous()
-        #out = self.efm1(out, edge_att)
+        # out = self.efm1(out, edge_att)
+        # print(out.shape) [8, 128, 32, 32]
 
-        out = F.relu(F.interpolate(self.decoder3(out),scale_factor=(2,2),mode ='bilinear'))
+        out = F.relu(F.interpolate(self.decoder3(out), scale_factor=(2, 2), mode='bilinear'))
+        # print(out.shape) [8, 32, 64, 64]
+        # out = torch.add(out,t2)
         out = self.efm2(t2, out, edge_att)
-        out = F.relu(F.interpolate(self.decoder4(out),scale_factor=(2,2),mode ='bilinear'))
+        out = F.relu(F.interpolate(self.decoder4(out), scale_factor=(2, 2), mode='bilinear'))
+        # print(out.shape) [8, 16, 128, 128]
+        # out = torch.add(out,t1)
         out = self.efm3(t1, out, edge_att)
-        out = F.relu(F.interpolate(self.decoder5(out),scale_factor=(2,2),mode ='bilinear'))
+        out = F.relu(F.interpolate(self.decoder5(out), scale_factor=(2, 2), mode='bilinear'))
+        # print(out.shape) [8, 16, 256, 256]
         out = self.final(out)
 
-        oe = F.interpolate(edge_att, scale_factor=(2,2), mode='bilinear', align_corners=False)
-        return out,oe
+        oe = F.interpolate(edge_att, scale_factor=(2, 2), mode='bilinear', align_corners=False)
+        return out, oe

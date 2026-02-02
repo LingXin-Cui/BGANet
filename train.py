@@ -87,7 +87,7 @@ def parse_args():
     parser.add_argument('--dataset', default='ISIC2017', help='dataset name')
     parser.add_argument('--data_dir', default='inputs', help='dataset dir')
 
-    parser.add_argument('--output_dir', default='./output_V1', help='ouput dir')
+    parser.add_argument('--output_dir', default='./output', help='ouput dir')
 
     # optimizer
     parser.add_argument('--optimizer', default='Adam',
@@ -215,7 +215,7 @@ def validate(config, val_loader, model, criterion):
             # compute output
             if config['deep_supervision']:
                 outputs, outputs_e = model(input)
-                #outputs = model(input)
+                # outputs = model(input)
                 loss = 0
                 loss_s = 0
                 loss_e = 0
@@ -284,7 +284,6 @@ def main():
         print('%s: %s' % (key, config[key]))
     print('-' * 20)
 
-   
     with open(f'{output_dir}/{exp_name}/config.yml', 'w') as f:
         yaml.dump(config, f)
 
@@ -293,7 +292,6 @@ def main():
         criterion = nn.BCEWithLogitsLoss().cuda()
     else:
         criterion = losses.__dict__[config['loss']]().cuda()
-
 
     cudnn.benchmark = True
 
@@ -364,7 +362,6 @@ def main():
     val_img_ids = sorted(glob(os.path.join(config['data_dir'], config['dataset'], 'val', 'images', '*' + img_ext)))
     val_img_ids = [os.path.splitext(os.path.basename(p))[0] for p in val_img_ids]
 
-
     train_transform = Compose([
         RandomRotate90(),
         geometric.transforms.Flip(),
@@ -394,7 +391,6 @@ def main():
         num_classes=config['num_classes'],
         transform=val_transform)
 
-
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
         batch_size=config['batch_size'],
@@ -407,7 +403,6 @@ def main():
         shuffle=False,
         num_workers=config['num_workers'],
         drop_last=False)
-
 
     log = OrderedDict([
         ('epoch', []),
@@ -431,7 +426,6 @@ def main():
         # evaluate on validation set
         val_log = validate(config, val_loader, model, criterion)
 
-
         if config['scheduler'] == 'CosineAnnealingLR':
             scheduler.step()
         elif config['scheduler'] == 'ReduceLROnPlateau':
@@ -448,7 +442,6 @@ def main():
         log['val_iou'].append(val_log['iou'])
         log['val_dice'].append(val_log['dice'])
 
-
         pd.DataFrame(log).to_csv(f'{output_dir}/{exp_name}/log.csv', index=False)
 
         my_writer.add_scalar('train/loss', train_log['loss'], global_step=epoch)
@@ -460,7 +453,6 @@ def main():
         my_writer.add_scalar('val/best_iou_value', best_valiou, global_step=epoch)
         my_writer.add_scalar('val/best_dice_value', best_valdice, global_step=epoch)
 
-
         trigger += 1
 
         if val_log['iou'] > best_valiou:
@@ -471,7 +463,6 @@ def main():
             print('IoU: %.4f' % best_valiou)
             print('Dice: %.4f' % best_valdice)
             trigger = 0
-
 
         # early stopping
         if config['early_stopping'] >= 0 and trigger >= config['early_stopping']:

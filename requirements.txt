@@ -7,7 +7,7 @@ tqdm
 tensorboardX
 # mmcv-full==1.2.7
 numpy
-opencv-python
+opencv-python-headlss
 perceptual==0.1
 pillow==8.4.0
 scikit-image==0.17.2
